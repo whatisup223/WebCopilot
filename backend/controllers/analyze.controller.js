@@ -36,10 +36,11 @@ const getFallbackInsight = (id) => {
 
 const analyzePage = async (req, res) => {
     try {
-        const { text, url, language } = req.body;
+        const { text, url, language, uiLang } = req.body;
 
         if (!text) {
-            return res.status(400).json({ success: false, error: 'Page content is required for analysis. Please try refreshing the page.' });
+            const isAr = uiLang === 'ar';
+            return res.status(400).json({ success: false, error: isAr ? 'محتوى الصفحة مطلوب للتحليل. يرجى محاولة تحديث الصفحة.' : 'Page content is required for analysis. Please try refreshing the page.' });
         }
 
         // Fetch Setting for API Key safely without blocking if DB is down
@@ -54,7 +55,8 @@ const analyzePage = async (req, res) => {
         let apiKey = settings?.openaiKey || process.env.OPENAI_API_KEY;
 
         if (!apiKey) {
-            return res.status(400).json({ success: false, error: 'OpenAI API key is missing. Please configure it in the Admin Settings.' });
+            const isAr = uiLang === 'ar';
+            return res.status(400).json({ success: false, error: isAr ? 'مفتاح OpenAI مفقود. يرجى تهيئته في إعدادات المسؤول.' : 'OpenAI API key is missing. Please configure it in the Admin Settings.' });
         }
 
         // 1. طلب التحليل الذكي
@@ -66,7 +68,8 @@ const analyzePage = async (req, res) => {
             title: 'تحليل صفحة ويب',
             summary: analysisData.summary || 'No summary available.',
             keyPoints: analysisData.keyPoints || [],
-            toolsRecommended: (analysisData.recommendedTools || []).map(t => t.name || t),
+            toolsRecommended: analysisData.recommendedTools || [],
+            labels: analysisData.labels || {},
             shareableLink: analysisData.shareableLink
         });
 
@@ -92,10 +95,10 @@ const analyzePage = async (req, res) => {
 
 const analyzeUrl = async (req, res) => {
     try {
-        const { url, language } = req.body;
-        const isAr = language === 'Arabic' || language === 'العربية';
+        const { url, language, uiLang } = req.body;
+        const isAr = uiLang === 'ar';
         if (!url || !url.startsWith('http')) {
-            return res.status(400).json({ success: false, error: 'A valid URL is required.' });
+            return res.status(400).json({ success: false, error: isAr ? 'يرجى إدخال رابط صالح.' : 'A valid URL is required.' });
         }
 
         const axios = require('axios');
@@ -122,7 +125,7 @@ const analyzeUrl = async (req, res) => {
             });
         }
 
-        // Basic text extraction
+        // Basic Text Extraction
         let text = htmlResponse.data
             .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
             .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -130,7 +133,16 @@ const analyzeUrl = async (req, res) => {
             .replace(/\s+/g, ' ')
             .trim();
 
-        text = text.substring(0, 15000); // Truncate out massive pages
+        const words = text.split(/\s+/).filter(w => w.length > 0);
+        if (words.length < 3) {
+            return res.status(400).json({
+                success: false,
+                isQualityError: true,
+                error: isAr ? 'الصفحة فارغة تماماً ولا تحتوي على نصوص للتحليل.' : 'The page is completely empty and contains no text to analyze.'
+            });
+        }
+
+        text = text.substring(0, 15000); // Guard rails
 
         let settings = null;
         if (mongoose.connection.readyState === 1) {
@@ -140,7 +152,7 @@ const analyzeUrl = async (req, res) => {
         }
 
         let apiKey = settings?.openaiKey || process.env.OPENAI_API_KEY;
-        if (!apiKey) return res.status(400).json({ success: false, error: 'OpenAI API key is missing. Please configure it in Admin Settings.' });
+        if (!apiKey) return res.status(400).json({ success: false, error: isAr ? 'مفتاح OpenAI مفقود. يرجى تهيئته في إعدادات المسؤول.' : 'OpenAI API key is missing. Please configure it in Admin Settings.' });
 
         const analysisData = await aiService.analyzeText(text, apiKey, settings, language);
 
@@ -149,7 +161,8 @@ const analyzeUrl = async (req, res) => {
             title: 'Live Demo',
             summary: analysisData.summary || 'No summary available.',
             keyPoints: analysisData.keyPoints || [],
-            toolsRecommended: (analysisData.recommendedTools || []).map(t => t.name || t),
+            toolsRecommended: analysisData.recommendedTools || [],
+            labels: analysisData.labels || {},
             shareableLink: analysisData.shareableLink
         });
 

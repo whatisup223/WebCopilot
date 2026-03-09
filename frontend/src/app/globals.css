@@ -1,9 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Outfit", "IBM Plex Sans Arabic", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
+  --font-ibm: "IBM Plex Sans Arabic", sans-serif;
+}
+
 @layer base {
+
+  *,
+  ::before,
+  ::after {
+    font-family: "Outfit", "IBM Plex Sans Arabic", sans-serif !important;
+  }
+
+  html,
   body {
     background-color: #fafafa;
     color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  select,
+  textarea,
+  optgroup,
+  option {
+    font-family: "Outfit", "IBM Plex Sans Arabic", sans-serif !important;
+  }
+
+  [lang="ar"] *,
+  [dir="rtl"] * {
+    font-family: "IBM Plex Sans Arabic", "Outfit", sans-serif !important;
+  }
+
+  [lang="ar"],
+  [dir="rtl"] {
+    direction: rtl;
+  }
+
+  [lang="en"] *,
+  [dir="ltr"] * {
+    font-family: "Outfit", "IBM Plex Sans Arabic", sans-serif !important;
   }
 }
 
@@ -17,6 +58,7 @@
 
 .gradient-text {
   background: linear-gradient(90deg, #ff5e00 0%, #ff0055 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

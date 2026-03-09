@@ -22,6 +22,11 @@ const updateSettings = async (req, res) => {
         }
 
         const updates = req.body;
+        // Ensure freeDemoLimit is a number if provided
+        if (updates.freeDemoLimit !== undefined) {
+            updates.freeDemoLimit = Number(updates.freeDemoLimit);
+        }
+
         Object.assign(settings, updates);
 
         await settings.save();
@@ -34,10 +39,16 @@ const updateSettings = async (req, res) => {
 
 const getPublicSettings = async (req, res) => {
     try {
-        const settings = await Setting.findOne();
+        // Only attempt DB if connected, otherwise use fallback or default
+        let settings = null;
+        if (mongoose.connection.readyState === 1) {
+            settings = await Setting.findOne().maxTimeMS(2000); // 2s timeout
+        }
+
         const limit = (settings && settings.freeDemoLimit !== undefined) ? Number(settings.freeDemoLimit) : 1;
         res.json({ success: true, freeDemoLimit: limit });
     } catch (err) {
+        console.error("Public Settings Error:", err);
         res.json({ success: true, freeDemoLimit: 1 });
     }
 };

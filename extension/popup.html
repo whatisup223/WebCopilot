@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body dir="ltr">
     <div class="bg-glow bg-glow-orange"></div>
     <div class="bg-glow bg-glow-pink"></div>
 
@@ -51,9 +51,13 @@
         </div>
 
         <!-- Loading State -->
-        <div id="loading" class="state-container hidden text-center" style="padding-top: 40px;">
+        <div id="loading" class="state-container hidden" style="padding-top: 40px;">
             <div class="loader"></div>
-            <p class="loading-text">Running AI models...<br><span>Extracting gold from text</span></p>
+            <p class="loading-text" id="loadingMainText">Running AI models...</p>
+            <p class="loading-subtext" id="loadingSubText">Extracting gold from text</p>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
         </div>
 
         <!-- Results State -->

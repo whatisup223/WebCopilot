@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import LangToggle from '@/components/LangToggle';
+import { Sparkles, Brain, Wrench, ArrowRight, ExternalLink, ShieldCheck, Share2, MousePointer2 } from 'lucide-react';
 
-export const dynamic = 'force-dynamic'; // Prevent aggressive route caching
+export const dynamic = 'force-dynamic';
 
 export default async function InsightPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
@@ -10,7 +11,7 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
     const lang = cookieStore.get('NEXT_LOCALE')?.value || 'en';
     const isAr = lang === 'ar';
 
-    let insight = null;
+    let insight: any = null;
     let settings: any = null;
     let errorMsg = '';
     try {
@@ -38,13 +39,16 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
 
     if (!insight) {
         return (
-            <div className={`min-h-screen flex items-center justify-center p-4 ${isAr ? 'text-right' : 'text-left'}`}>
-                <div className="glass-card max-w-lg p-10 text-center rounded-3xl">
-                    <div className="text-4xl mb-4">⚠️</div>
-                    <h1 className="text-2xl font-black text-slate-800 mb-2">{errorMsg}</h1>
-                    <p className="text-slate-500 mb-6 font-medium">{isAr ? 'تأكد من صحة الرابط أو أن خادم البيانات يعمل.' : 'Make sure the link is correct and the server is running.'}</p>
-                    <Link href="/" className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition">
+            <div className={`min-h-screen flex items-center justify-center p-4 bg-[#fafafa] font-sans ${isAr ? 'text-right' : 'text-left'}`}>
+                <div className="glass-card max-w-lg p-12 text-center rounded-[2.5rem] shadow-2xl border-white">
+                    <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
+                        <ShieldCheck className="w-10 h-10" />
+                    </div>
+                    <h1 className="text-3xl font-black text-slate-900 mb-3">{errorMsg}</h1>
+                    <p className="text-slate-500 mb-8 font-medium leading-relaxed">{isAr ? 'تأكد من صحة الرابط أو أن خادم البيانات يعمل حالياً.' : 'Make sure the link is correct and the server is running.'}</p>
+                    <Link href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all hover:-translate-y-1 shadow-xl shadow-slate-900/20">
                         {isAr ? 'العودة للرئيسية' : 'Go Home'}
+                        <ArrowRight className={`w-5 h-5 ${isAr ? 'rotate-180' : ''}`} />
                     </Link>
                 </div>
             </div>
@@ -54,105 +58,181 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
     const adEnabled = settings?.adsEnabled ?? true;
     const adScript = settings?.topBannerScript || '';
 
-    return (
-        <div className={`min-h-screen relative overflow-hidden flex flex-col items-center py-12 px-4 ${isAr ? 'text-right' : 'text-left'}`}>
+    // Extract domain from URL for display
+    let domain = 'Source';
+    try {
+        domain = new URL(insight.pageUrl).hostname.replace('www.', '');
+    } catch (e) { }
 
-            {/* Nav & Toggle Overlay */}
-            <div className={`w-full max-w-4xl flex justify-between items-center mb-8 relative z-20 ${isAr ? 'flex-row-reverse' : ''}`}>
-                <Link href="/" className={`flex items-center gap-2 font-black text-slate-800 hover:text-orange-600 transition-colors ${isAr ? 'flex-row-reverse' : ''}`}>
-                    <div className="bg-gradient-to-tr from-orange-500 to-red-500 w-8 h-8 rounded-[10px] flex items-center justify-center shadow-md">
-                        <span className="text-white font-black text-lg leading-none mt-0.5">W</span>
+    return (
+        <div className={`min-h-screen relative overflow-hidden flex flex-col items-center py-8 px-4 bg-[#fafafa] font-sans ${isAr ? 'text-right' : 'text-left'}`}>
+
+            {/* Background Decor */}
+            <div className="fixed top-[-10%] start-[-10%] w-[50%] h-[50%] bg-orange-400/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+            <div className="fixed bottom-[-10%] end-[-10%] w-[40%] h-[60%] bg-pink-400/10 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+
+            {/* Nav Header */}
+            <div className={`w-full max-w-7xl flex justify-between items-center mb-8 relative z-20 ${isAr ? 'flex-row-reverse' : ''}`}>
+                <Link href="/" className={`flex items-center gap-3 group ${isAr ? 'flex-row-reverse' : ''}`}>
+                    <div className="bg-gradient-to-tr from-orange-500 to-red-500 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
+                        <span className="text-white font-black text-lg">W</span>
                     </div>
-                    Web Copilot
+                    <div>
+                        <span className="font-bold text-slate-900 text-lg tracking-tight block leading-tight">WebCopilot</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'رفيقك الذكي' : 'AI COMPANION'}</span>
+                    </div>
                 </Link>
-                <LangToggle isAr={isAr} />
+                <div className="flex items-center gap-4">
+                    <LangToggle isAr={isAr} />
+                    <button className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 text-slate-600 hover:text-orange-500 transition-all">
+                        <Share2 className="w-4.5 h-4.5" />
+                    </button>
+                </div>
             </div>
 
-            {/* Background Glows */}
-            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-400/20 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
-            <div className="fixed bottom-[-10%] right-[-10%] w-[40%] h-[60%] bg-pink-400/10 rounded-full blur-[140px] -z-10 pointer-events-none"></div>
+            <main className="max-w-7xl w-full relative z-10 flex flex-col items-center">
 
-            <div className="max-w-4xl w-full glass-card rounded-[3rem] p-0 overflow-hidden relative border-white">
-
-                {/* Ad Banner For Free Users */}
+                {/* TOP AD BANNER */}
                 {adEnabled && (
-                    <div className="bg-slate-100/50 p-4 text-center border-b border-white/50 backdrop-blur-sm min-h-[140px] flex flex-col items-center justify-center">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'مساحة إعلانية' : 'ADVERTISEMENT'}</span>
-                        {adScript ? (
-                            <div className="w-full max-w-2xl overflow-hidden" dangerouslySetInnerHTML={{ __html: adScript }}></div>
-                        ) : (
-                            <div className="h-24 w-full bg-white rounded-2xl flex items-center justify-center border border-slate-200 border-dashed shadow-sm mx-auto max-w-2xl">
-                                <p className="text-slate-300 font-bold text-sm select-none italic">{isAr ? 'يمكنك تفعيل AdSense من لوحة التحكم' : 'Configure AdSense in Admin Panel'}</p>
-                            </div>
-                        )}
+                    <div className="w-full max-w-4xl mb-8">
+                        <div className="bg-white/50 p-3 min-h-[90px] rounded-2xl border border-dashed border-slate-200 flex items-center justify-center">
+                            {adScript ? (
+                                <div className="w-full flex justify-center overflow-hidden" dangerouslySetInnerHTML={{ __html: adScript }}></div>
+                            ) : (
+                                <p className="text-slate-300 italic text-xs font-medium">{isAr ? 'مساحة إعلانية علوية' : 'Top display banner area'}</p>
+                            )}
+                        </div>
                     </div>
                 )}
 
-                <div className="p-8 md:p-12">
-                    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4 ${isAr ? 'md:flex-row-reverse' : ''}`}>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">{isAr ? 'تحليل صفحة الويب' : 'Webpage AI Insight'}</h1>
-                        <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-[11px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-orange-500/20 border border-orange-400">Web Copilot Verified</span>
-                    </div>
+                <div className="w-full flex flex-col lg:flex-row gap-6 items-start justify-center">
 
-                    <div className="space-y-10">
-                        {/* Summary Section */}
-                        <section>
-                            <h2 className={`text-xl font-black text-slate-800 mb-4 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}><span className="text-orange-500 text-2xl">📝</span> {isAr ? 'الملخص الشامل' : 'Comprehensive Summary'}</h2>
-                            <p className="text-slate-600 leading-relaxed font-medium bg-white/70 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-white shadow-sm text-[15px] whitespace-pre-line">
-                                {insight.summary}
-                            </p>
-                        </section>
-
-                        {/* Bullet Points Section */}
-                        <section>
-                            <h2 className={`text-xl font-black text-slate-800 mb-4 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}><span className="text-pink-500 text-2xl">💡</span> {isAr ? 'النقاط الرئيسية' : 'Smart Takeaways'}</h2>
-                            <ul className="space-y-3 bg-white/70 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-white shadow-sm text-[15px]">
-                                {(insight.keyPoints || []).map((point: string, i: number) => (
-                                    <li key={i} className={`flex items-start gap-3 ${isAr ? 'flex-row-reverse' : ''}`}>
-                                        <span className="text-orange-500 mt-0.5 text-xs">⭕</span>
-                                        <span className="text-slate-600 font-medium leading-relaxed">{point}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-
-                        {/* Affiliate Tools / Sponsors */}
-                        <section>
-                            <h2 className={`text-xl font-black text-slate-800 mb-4 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}><span className="text-indigo-500 text-2xl">🛠️</span> {isAr ? 'أدوات مقترحة لمساعدتك' : 'Recommended Toolset'}</h2>
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${isAr ? 'text-right' : 'text-left'}`}>
-                                {(insight.toolsRecommended || []).map((tool: any, i: number) => {
-                                    const isAffiliate = i % 2 === 0; // Fake toggle type for demo
-                                    return typeof tool === 'string' ? (
-                                        <div key={i} className={`flex items-center justify-between p-5 rounded-2xl border-2 border-transparent bg-white shadow-sm group ${isAr ? 'flex-row-reverse' : ''}`}>
-                                            <span className="font-extrabold text-slate-800 text-lg">{tool}</span>
-                                        </div>
-                                    ) : (
-                                        <a key={i} href={tool.url || '#'} target="_blank" className={`flex items-center justify-between p-5 rounded-2xl border-2 border-transparent bg-white hover:border-orange-500 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 group ${isAr ? 'flex-row-reverse' : ''}`}>
-                                            <span className="font-extrabold text-slate-800 group-hover:text-orange-600 transition-colors text-lg truncate pr-3">{tool.name || tool}</span>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-100`}>
-                                                {isAr ? 'أداة مفيدة' : 'USEFUL'}
-                                            </span>
-                                        </a>
-                                    );
-                                })}
+                    {/* LEFT SIDEBAR AD */}
+                    {adEnabled && (
+                        <aside className="hidden lg:flex flex-col gap-2 w-40 sticky top-24 shrink-0">
+                            <div className="bg-white/50 h-[600px] w-full rounded-2xl border border-dashed border-slate-200 flex items-center justify-center p-4">
+                                <p className="text-slate-300 italic text-xs font-medium text-center rotate-90">{isAr ? 'مساحة إعلانية جانبية' : 'Vertical Sidebar Ad'}</p>
                             </div>
-                        </section>
+                        </aside>
+                    )}
+
+                    {/* MAIN CONTENT CENTER */}
+                    <div className="max-w-4xl w-full">
+                        <div className="glass-card rounded-[2.5rem] bg-white/70 backdrop-blur-3xl p-0 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border-white relative" dir={insight.labels?.dir || (isAr ? 'rtl' : 'ltr')}>
+
+                            {/* Header/Status Bar */}
+                            <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/40">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                        {isAr ? 'تحليل ذكي معتمد' : 'Verified AI Insight'}
+                                    </span>
+                                </div>
+                                <a href={insight.pageUrl} target="_blank" className="text-xs font-medium text-slate-400 hover:text-orange-600 flex items-center gap-1.5 transition-colors max-w-[200px] truncate" dir="ltr">
+                                    {domain} <ExternalLink className="w-3 h-3" />
+                                </a>
+                            </div>
+
+                            <div className="p-8 md:p-12">
+                                {/* Summary Block */}
+                                <div className="mb-12">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/10">
+                                            <Sparkles className="w-5 h-5" />
+                                        </div>
+                                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                                            {insight.labels?.summary || 'AI Summary'}
+                                        </h2>
+                                    </div>
+
+                                    <div className="relative bg-white/80 p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm leading-relaxed text-slate-600 font-medium text-base md:text-lg">
+                                        {insight.summary}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Insights */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center border border-blue-100">
+                                                <Brain className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-800">{insight.labels?.keyPoints || 'Core Insights'}</h3>
+                                        </div>
+                                        <ul className="space-y-3">
+                                            {(insight.keyPoints || []).map((point: string, i: number) => (
+                                                <li key={i} className="flex items-start gap-3 p-4 bg-slate-50/50 rounded-xl border border-transparent hover:border-slate-100 transition-all">
+                                                    <div className="w-6 h-6 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-[9px] shrink-0 mt-0.5">
+                                                        {i + 1}
+                                                    </div>
+                                                    <span className="text-slate-600 font-medium text-sm leading-relaxed">{point}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Tools */}
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100">
+                                                <Wrench className="w-5 h-5" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-800">{insight.labels?.recommendedTools || 'Smart Tools'}</h3>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {insight.toolsRecommended?.length > 0 ? (
+                                                insight.toolsRecommended.map((tool: any, i: number) => (
+                                                    <a key={i} href={typeof tool === 'string' ? '#' : tool.url || '#'} target="_blank" className="flex items-center justify-between gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:border-orange-200 transition-all group">
+                                                        <span className="font-bold text-slate-800 text-sm truncate">{typeof tool === 'string' ? tool : tool.name}</span>
+                                                        <MousePointer2 className="w-3.5 h-3.5 text-slate-300 group-hover:text-orange-500" />
+                                                    </a>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 text-center border-2 border-dashed border-slate-100 rounded-xl opacity-50">
+                                                    <p className="text-xs font-semibold">{insight.labels?.noTools || 'No tools found'}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer CTA */}
+                            <div className="bg-slate-900 p-8 md:p-12 text-center text-white m-3 rounded-[2rem] relative overflow-hidden">
+                                <h3 className="text-xl md:text-2xl font-bold mb-4">{insight.labels?.loveSummary || 'Love the summary?'}</h3>
+                                <p className="text-slate-400 mb-6 text-xs md:text-sm font-medium leading-relaxed max-w-md mx-auto">
+                                    {insight.labels?.getExtension || 'Get our Chrome extension and save hours of reading every day.'}
+                                </p>
+                                <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 active:scale-95 text-sm inline-flex items-center gap-2">
+                                    {insight.labels?.addToBrowser || 'Add to Browser'}
+                                    <ArrowRight className={`w-4 h-4 ${(insight.labels?.dir || (isAr ? 'rtl' : 'ltr')) === 'rtl' ? 'rotate-180' : ''}`} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* RIGHT SIDEBAR AD */}
+                    {adEnabled && (
+                        <aside className="hidden lg:flex flex-col gap-2 w-40 sticky top-24 shrink-0">
+                            <div className="bg-white/50 h-[600px] w-full rounded-2xl border border-dashed border-slate-200 flex items-center justify-center p-4">
+                                <p className="text-slate-300 italic text-xs font-medium text-center -rotate-90">{isAr ? 'مساحة إعلانية جانبية' : 'Vertical Sidebar Ad'}</p>
+                            </div>
+                        </aside>
+                    )}
                 </div>
 
-                {/* Footer CTA */}
-                <div className="bg-slate-900 border-t border-slate-800 p-10 md:p-14 text-center text-white m-2 rounded-[2.5rem] relative overflow-hidden">
-                    <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-64 bg-orange-500/20 blur-[80px] rounded-full pointer-events-none"></div>
-                    <h3 className="text-2xl font-black mb-3 relative z-10">{isAr ? 'وفر وقتك ولخّص مقالاتك بنفسك في ثوانٍ!' : 'Create your own summaries in seconds!'}</h3>
-                    <p className="text-slate-400 mb-8 max-w-lg mx-auto font-medium text-sm leading-relaxed relative z-10">
-                        {isAr ? 'أضف مساعدنا الذكي لمتصفح كروم مجاناً ووفر آلاف الساعات من القراءة المطوّلة شهرياً.' : 'Install our free Chrome copilot today, save thousands of reading hours and discover great tools instantly.'}
-                    </p>
-                    <button className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-black px-10 py-4 rounded-full transition-transform shadow-xl shadow-orange-500/30 hover:-translate-y-1 relative z-10 border border-orange-400">
-                        {isAr ? 'تثبيت الإضافة (ومجاناً)' : 'Add Extension Now (Free)'}
-                    </button>
-                </div>
-
-            </div>
+                {/* BOTTOM AD (Optional extra space) */}
+                {adEnabled && (
+                    <div className="w-full max-w-4xl mt-12 pb-12">
+                        <div className="bg-orange-50/30 p-4 h-32 rounded-3xl border border-dashed border-orange-200 flex items-center justify-center">
+                            <p className="text-slate-400 italic text-xs font-bold">{isAr ? 'مساحة إعلانية إضافية' : 'Additional Ad Space'}</p>
+                        </div>
+                    </div>
+                )}
+                <footer className="mt-20 pb-12 text-center">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">&copy; 2026 WebCopilot AI Insight Hub. All Rights Reserved.</p>
+                </footer>
+            </main>
         </div>
     );
 }

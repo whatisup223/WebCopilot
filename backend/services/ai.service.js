@@ -16,39 +16,72 @@ const analyzeText = async (text, apiKey, settings, language = '') => {
         console.error("Error fetching sponsors from MongoDB for AI:", err);
     }
 
-    let basePrompt = settings?.systemPrompt
-        ? settings.systemPrompt
-        : `
-        You are an intelligent AI assistant integrated into Web Copilot. Your task is to analyze complex web page text and deliver a highly valuable knowledge capsule to the user.
-        
-        ALWAYS extract the following in pure JSON format:
-        1. "summary": A comprehensive summary of the page in 2-3 sentences.
-        2. "keyPoints": A list of 3-5 carefully extracted insights.
-        3. "recommendedTools": Suggest 2 useful tools or resources related to the article topic. 
-        
-        (Reply ONLY with pure JSON without markdown borders)
-        `;
+    let basePrompt = settings?.systemPrompt ? settings.systemPrompt : `
+        You are an intelligent AI assistant. Analyze the text and provide a knowledge capsule.
+        Extract: "summary", "keyPoints", and "recommendedTools".
+    `;
+
+    const mandatoryInstructions = `
+    RESPONSE STRUCTURE:
+    Return a JSON object with:
+    - "summary": string (2-3 sentences)
+    - "keyPoints": string array (3-5 items)
+    - "recommendedTools": array of objects {name, url}. You MUST ensure this array has 2-3 items.
+    - "labels": object containing translated UI strings in the exact same language as the analysis:
+        - "summary": string (Translated "AI Summary")
+        - "keyPoints": string (Translated "Core Insights")
+        - "recommendedTools": string (Translated "Smart Tools")
+        - "noTools": string (Translated "No tools found for this context")
+        - "shareLink": string (Translated "SHARE LINK" - short and uppercase if applicable)
+        - "copyLink": string (Translated "Copy link")
+        - "copied": string (Translated "Copied!")
+        - "loveSummary": string (Translated "Love the summary?")
+        - "getExtension": string (Translated "Get the free extension to summarize unlimited tabs in real-time.")
+        - "addToBrowser": string (Translated "Add to Browser")
+        - "dir": string (Must be "rtl" if the output language is Arabic, Hebrew, Urdu, Persian, otherwise "ltr")
+    `;
 
     // Intelligent Sponsor Integration
+    let sponsorSection = "";
     if (dbSponsors && dbSponsors.length > 0) {
         const sponsorsList = dbSponsors.map(s => `- ${s.name} (Category: ${s.category}): ${s.url}`).join('\n');
-        basePrompt += `\n\nINTERNAL TOOLS DIRECTORY:\n${sponsorsList}\n\nINSTRUCTION FOR TOOLS: From the INTERNAL TOOLS DIRECTORY above, intelligently pick 1 or 2 tools that are MOST relevant to the input text context. If a tool fits the topic, use its name and url exactly as provided. If no internal tools are relevant, suggest 2 high-quality external tools instead. Return them in the "recommendedTools" array as objects: [{"name": "ToolName", "url": "URL"}].`;
+        sponsorSection = `
+        INTERNAL TOOLS DIRECTORY (MANDATORY PRIORITY):
+        ${sponsorsList}
+
+        INSTRUCTION FOR SMART SELECTION:
+        1. Deeply analyze the webpage content and intent.
+        2. Pick 2-3 tools from the INTERNAL list above that best match the content's niche (SEO, Design, Marketing, etc.).
+        3. If any internal tool is even tangentially related, use it.
+        4. ONLY if the internal list is empty or completely irrelevant (e.g., a cooking blog with only crypto tools), suggest world-class external SaaS tools (like Canva, Semrush, or generic productivity tools).
+        `;
     } else {
-        basePrompt += `\n\nINSTRUCTION FOR TOOLS: Suggest 2 high-quality SaaS tools related to the topic. Return them as objects: [{"name": "ToolName", "url": "URL"}].`;
+        sponsorSection = `\n\nINSTRUCTION FOR TOOLS: Since the internal directory is empty, suggest 2-3 world-class SaaS tools or digital resources (e.g., Google Trends, Canva, Notion) that are highly relevant to the provided text to add value to the user.`;
     }
 
-    if (language && language.toLowerCase() !== 'auto') {
-        basePrompt += `\n\nCRITICAL INSTRUCTION: You MUST translate and write your ENTIRE JSON response (including 'summary', 'keyPoints', and tool descriptions/names) ONLY in the following language: ${language}. Ensure the output remains structurally valid JSON.`;
-    }
+    let langInstruction = (language && language.toLowerCase() !== 'auto')
+        ? `\n\nCRITICAL: Write the ENTIRE response in ${language}.`
+        : "";
 
-    const finalPrompt = `${basePrompt}\n\nText to analyze:\n"${text}"`;
+    const finalPrompt = `
+    ${basePrompt}
+    ${mandatoryInstructions}
+    ${sponsorSection}
+    ${langInstruction}
+    
+    TEXT TO ANALYZE:
+    "${text.substring(0, 10000)}"
+    `;
 
     try {
         const response = await openai.chat.completions.create({
             model: settings?.aiModel || "gpt-4o-mini",
-            messages: [{ role: "user", content: finalPrompt }],
+            messages: [
+                { role: "system", content: "You are a helpful assistant that summarizes web content. Provide the most useful summary, key points and tools based on the text provided, regardless of its length." },
+                { role: "user", content: finalPrompt }
+            ],
             response_format: { type: "json_object" },
-            temperature: 0.7,
+            temperature: 0.4,
         });
 
         const result = JSON.parse(response.choices[0].message.content);

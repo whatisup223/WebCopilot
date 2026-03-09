@@ -8,12 +8,12 @@ const analyzeText = async (text, apiKey, settings, language = '') => {
 
     const openai = new OpenAI({ apiKey: apiKey });
 
-    // Fetch active sponsors from the dedicated collection
+    // Fetch active sponsors from MongoDB
     let dbSponsors = [];
     try {
         dbSponsors = await Sponsor.find({ active: true });
     } catch (err) {
-        console.error("Error fetching sponsors for AI:", err);
+        console.error("Error fetching sponsors from MongoDB for AI:", err);
     }
 
     let basePrompt = settings?.systemPrompt
@@ -52,10 +52,7 @@ const analyzeText = async (text, apiKey, settings, language = '') => {
         });
 
         const result = JSON.parse(response.choices[0].message.content);
-
-        // توفير رابط فيروسي مبدئي للمشاركة (سيتم استبداله برابط المنصة الفعلي في المستقبل)
         result.shareableLink = "https://yourdomain.com/insight/" + Date.now().toString(36);
-
         return result;
     } catch (error) {
         console.error("OpenAI Error:", error);

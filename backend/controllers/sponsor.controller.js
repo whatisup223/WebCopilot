@@ -1,10 +1,6 @@
 const Sponsor = require('../models/Sponsor');
-const mongoose = require('mongoose');
 
 const getSponsors = async (req, res) => {
-    if (mongoose.connection.readyState !== 1) {
-        return res.json({ success: true, sponsors: [] }); // Return empty if DB offline
-    }
     try {
         const sponsors = await Sponsor.find().sort({ createdAt: -1 });
         res.json({ success: true, sponsors });
@@ -15,11 +11,8 @@ const getSponsors = async (req, res) => {
 };
 
 const createSponsor = async (req, res) => {
-    if (mongoose.connection.readyState !== 1) {
-        return res.status(500).json({ success: false, error: "Database offline. Cannot save sponsor." });
-    }
     try {
-        console.log("Creating Sponsor with body:", req.body);
+        console.log("Creating Sponsor in MongoDB:", req.body);
         const sponsor = await Sponsor.create(req.body);
         res.json({ success: true, sponsor });
     } catch (error) {
@@ -29,11 +22,8 @@ const createSponsor = async (req, res) => {
 };
 
 const updateSponsor = async (req, res) => {
-    if (mongoose.connection.readyState !== 1) {
-        return res.status(500).json({ success: false, error: "Database offline" });
-    }
     try {
-        console.log("Updating Sponsor ID:", req.params.id, "with body:", req.body);
+        console.log("Updating Sponsor in MongoDB ID:", req.params.id);
         const sponsor = await Sponsor.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json({ success: true, sponsor });
     } catch (error) {
@@ -43,11 +33,8 @@ const updateSponsor = async (req, res) => {
 };
 
 const deleteSponsor = async (req, res) => {
-    if (mongoose.connection.readyState !== 1) {
-        return res.status(500).json({ success: false, error: "Database offline" });
-    }
     try {
-        console.log("Deleting Sponsor ID:", req.params.id);
+        console.log("Deleting Sponsor from MongoDB ID:", req.params.id);
         await Sponsor.findByIdAndDelete(req.params.id);
         res.json({ success: true });
     } catch (error) {

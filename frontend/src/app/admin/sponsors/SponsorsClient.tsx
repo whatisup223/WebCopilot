@@ -21,9 +21,19 @@ export default function SponsorsClient({ isAr }: { isAr: boolean }) {
         category: ''
     });
 
+    const getBaseUrl = () => {
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname !== 'localhost' && !hostname.startsWith('127.')) {
+                return `http://${hostname}:5000`;
+            }
+        }
+        return 'http://localhost:5000';
+    };
+
     const fetchSponsors = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/sponsors');
+            const res = await fetch(`${getBaseUrl()}/api/sponsors`);
             const data = await res.json();
             if (data.success) setSponsors(data.sponsors);
         } catch (err) {
@@ -42,7 +52,7 @@ export default function SponsorsClient({ isAr }: { isAr: boolean }) {
         if (!newSponsor.name || !newSponsor.url) return;
         setSubmitting(true);
         try {
-            const res = await fetch('http://localhost:5000/api/sponsors', {
+            const res = await fetch(`${getBaseUrl()}/api/sponsors`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newSponsor)
@@ -51,9 +61,13 @@ export default function SponsorsClient({ isAr }: { isAr: boolean }) {
             if (data.success) {
                 setSponsors([data.sponsor, ...sponsors]);
                 setNewSponsor({ name: '', url: '', type: 'AFFILIATE', category: '' });
+                if (isAr) alert("تم إضافة الأداة بنجاح!");
+            } else {
+                alert(isAr ? `خطأ: ${data.error}` : `Error: ${data.error}`);
             }
         } catch (err) {
             console.error("Error adding sponsor:", err);
+            alert(isAr ? "فشل الاتصال بالخادم" : "Server connection failed");
         } finally {
             setSubmitting(false);
         }
@@ -62,7 +76,7 @@ export default function SponsorsClient({ isAr }: { isAr: boolean }) {
     const handleDelete = async (id: string) => {
         if (!confirm(isAr ? 'هل أنت متأكد من حذف هذه الأداة؟' : 'Are you sure you want to delete this tool?')) return;
         try {
-            const res = await fetch(`http://localhost:5000/api/sponsors/${id}`, { method: 'DELETE' });
+            const res = await fetch(`${getBaseUrl()}/api/sponsors/${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
                 setSponsors(sponsors.filter(s => s._id !== id));

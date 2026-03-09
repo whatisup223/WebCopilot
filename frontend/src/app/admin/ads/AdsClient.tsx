@@ -10,8 +10,18 @@ export default function AdsClient({ isAr }: { isAr: boolean }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    const getBaseUrl = () => {
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            if (hostname !== 'localhost' && !hostname.startsWith('127.')) {
+                return `http://${hostname}:5000`;
+            }
+        }
+        return 'http://localhost:5000';
+    };
+
     useEffect(() => {
-        fetch('http://localhost:5000/api/settings')
+        fetch(`${getBaseUrl()}/api/settings`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -27,7 +37,7 @@ export default function AdsClient({ isAr }: { isAr: boolean }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch('http://localhost:5000/api/settings', {
+            const res = await fetch(`${getBaseUrl()}/api/settings`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)

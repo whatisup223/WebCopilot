@@ -11,16 +11,25 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
     const isAr = lang === 'ar';
 
     let insight = null;
+    let settings: any = null;
     let errorMsg = '';
     try {
-        const res = await fetch(`http://localhost:5000/api/analyze/insight/${resolvedParams.id}`, { cache: 'no-store' });
-        const data = await res.json();
-        console.log(`[Next.js Server] Fetch ${resolvedParams.id} =>`, data); // Debugging
-        if (data.success && data.insight) {
-            insight = data.insight;
+        const [insightRes, settingsRes] = await Promise.all([
+            fetch(`http://localhost:5000/api/analyze/insight/${resolvedParams.id}`, { cache: 'no-store' }),
+            fetch(`http://localhost:5000/api/settings`, { cache: 'no-store' })
+        ]);
+
+        const insightData = await insightRes.json();
+        const settingsData = await settingsRes.json();
+
+        if (insightData.success && insightData.insight) {
+            insight = insightData.insight;
         } else {
-            console.error(`Insight failed for ID ${resolvedParams.id}:`, data);
             errorMsg = isAr ? 'عذراً، لم يتم العثور على هذا التحليل.' : 'Insight not found.';
+        }
+
+        if (settingsData.success) {
+            settings = settingsData.settings;
         }
     } catch (err) {
         console.error("Fetch Error:", err);
@@ -41,6 +50,9 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
             </div>
         );
     }
+
+    const adEnabled = settings?.adsEnabled ?? true;
+    const adScript = settings?.topBannerScript || '';
 
     return (
         <div className={`min-h-screen relative overflow-hidden flex flex-col items-center py-12 px-4 ${isAr ? 'text-right' : 'text-left'}`}>
@@ -63,12 +75,18 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
             <div className="max-w-4xl w-full glass-card rounded-[3rem] p-0 overflow-hidden relative border-white">
 
                 {/* Ad Banner For Free Users */}
-                <div className="bg-slate-100/50 p-4 text-center border-b border-white/50 backdrop-blur-sm">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isAr ? 'مساحة إعلانية لجمهور الخطط المجانية' : 'AD START (Free Tier Users)'}</span>
-                    <div className="h-24 bg-white rounded-2xl mt-3 flex items-center justify-center border border-slate-200 shadow-sm mx-auto max-w-2xl cursor-pointer hover:border-orange-200 transition">
-                        <p className="text-slate-300 font-bold text-lg select-none">ADVERTISEMENT 728x90</p>
+                {adEnabled && (
+                    <div className="bg-slate-100/50 p-4 text-center border-b border-white/50 backdrop-blur-sm min-h-[140px] flex flex-col items-center justify-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{isAr ? 'مساحة إعلانية' : 'ADVERTISEMENT'}</span>
+                        {adScript ? (
+                            <div className="w-full max-w-2xl overflow-hidden" dangerouslySetInnerHTML={{ __html: adScript }}></div>
+                        ) : (
+                            <div className="h-24 w-full bg-white rounded-2xl flex items-center justify-center border border-slate-200 border-dashed shadow-sm mx-auto max-w-2xl">
+                                <p className="text-slate-300 font-bold text-sm select-none italic">{isAr ? 'يمكنك تفعيل AdSense من لوحة التحكم' : 'Configure AdSense in Admin Panel'}</p>
+                            </div>
+                        )}
                     </div>
-                </div>
+                )}
 
                 <div className="p-8 md:p-12">
                     <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4 ${isAr ? 'md:flex-row-reverse' : ''}`}>

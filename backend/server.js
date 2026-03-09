@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 const analyzeRoutes = require('./routes/analyze.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const settingsRoutes = require('./routes/settings');
+const sponsorRoutes = require('./routes/sponsor.routes');
 
 // ====== Initialization ======
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/sponsors', sponsorRoutes);
 
 // Base Route
 app.get('/', (req, res) => {

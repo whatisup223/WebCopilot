@@ -1,4 +1,5 @@
 const { OpenAI } = require('openai');
+const Sponsor = require('../models/Sponsor');
 
 const analyzeText = async (text, apiKey, settings, language = '') => {
     if (!apiKey) {
@@ -6,6 +7,14 @@ const analyzeText = async (text, apiKey, settings, language = '') => {
     }
 
     const openai = new OpenAI({ apiKey: apiKey });
+
+    // Fetch active sponsors from the dedicated collection
+    let dbSponsors = [];
+    try {
+        dbSponsors = await Sponsor.find({ active: true });
+    } catch (err) {
+        console.error("Error fetching sponsors for AI:", err);
+    }
 
     let basePrompt = settings?.systemPrompt
         ? settings.systemPrompt
@@ -21,8 +30,8 @@ const analyzeText = async (text, apiKey, settings, language = '') => {
         `;
 
     // Intelligent Sponsor Integration
-    if (settings?.sponsors && settings.sponsors.length > 0) {
-        const sponsorsList = settings.sponsors.map(s => `- ${s.name} (Category: ${s.category}): ${s.url}`).join('\n');
+    if (dbSponsors && dbSponsors.length > 0) {
+        const sponsorsList = dbSponsors.map(s => `- ${s.name} (Category: ${s.category}): ${s.url}`).join('\n');
         basePrompt += `\n\nINTERNAL TOOLS DIRECTORY:\n${sponsorsList}\n\nINSTRUCTION FOR TOOLS: From the INTERNAL TOOLS DIRECTORY above, intelligently pick 1 or 2 tools that are MOST relevant to the input text context. If a tool fits the topic, use its name and url exactly as provided. If no internal tools are relevant, suggest 2 high-quality external tools instead. Return them in the "recommendedTools" array as objects: [{"name": "ToolName", "url": "URL"}].`;
     } else {
         basePrompt += `\n\nINSTRUCTION FOR TOOLS: Suggest 2 high-quality SaaS tools related to the topic. Return them as objects: [{"name": "ToolName", "url": "URL"}].`;

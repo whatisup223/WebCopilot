@@ -10,11 +10,8 @@ const settingSchema = new mongoose.Schema({
     stripePubKey: { type: String, default: '' },
     stripeSecKey: { type: String, default: '' },
     stripeWebhookSecret: { type: String, default: '' },
-    sponsors: [{
-        name: String,
-        url: String,
-        category: String // e.g. "Marketing", "SEO", "Productivity"
-    }]
+    adsEnabled: { type: Boolean, default: true },
+    topBannerScript: { type: String, default: '' }
 }, {
     timestamps: true
 });

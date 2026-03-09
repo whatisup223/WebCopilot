@@ -61,7 +61,7 @@ export default function LiveDemo({ isAr }: { isAr: boolean }) {
                 body: JSON.stringify({ url, language })
             });
             const data = await res.json();
-            if (!data.success) throw new Error(data.error || 'Failed to analyze url');
+            if (!data.success) throw new Error(data.message || data.error || 'Failed to analyze url');
 
             setResult(data);
             if (typeof window !== 'undefined') {
@@ -70,7 +70,7 @@ export default function LiveDemo({ isAr }: { isAr: boolean }) {
                 setDemoCount(newCount);
             }
         } catch (err: any) {
-            setError(err.message || 'Analysis failed. Make sure backend is running.');
+            setError(err.message || (isAr ? 'فشل التحليل. تأكد من عمل السيرفر.' : 'Analysis failed. Make sure backend is running.'));
         } finally {
             setLoading(false);
         }

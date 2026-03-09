@@ -10,8 +10,9 @@ const getFallbackSettings = () => {
     } catch (e) {
         return {
             siteName: 'Web Copilot', siteDescription: '', openaiKey: '', aiModel: 'gpt-4o',
-            systemPrompt: 'You are an intelligent AI assistant integrated into Web Copilot. Your task is to analyze complex web page text and deliver a highly valuable knowledge capsule to the user.\n\nALWAYS extract the following in pure JSON format:\n1. "summary": A comprehensive summary of the page in 2-3 sentences.\n2. "keyPoints": A list of 3-5 carefully extracted insights.\n3. "recommendedTools": Suggest 2 SaaS tools related to the article topic. MUST be an array of objects: [{"name": "ToolName", "url": "https://xyz.com/?aff=123", "type": "Sponsor"}].\n\n(Reply ONLY with pure JSON without markdown borders)',
-            freeDemoLimit: 1
+            systemPrompt: 'You are an intelligent AI assistant integrated into Web Copilot. Your task is to analyze complex web page text and deliver a highly valuable knowledge capsule to the user.\n\nALWAYS extract the following in pure JSON format:\n1. "summary": A comprehensive summary of the page in 2-3 sentences.\n2. "keyPoints": A list of 3-5 carefully extracted insights.\n3. "recommendedTools": Suggest 2 useful tools or resources related to the article topic. Return them as objects: [{"name": "ToolName", "url": "URL"}].\n\n(Reply ONLY with pure JSON without markdown borders)',
+            freeDemoLimit: 1,
+            sponsors: []
         };
     }
 };

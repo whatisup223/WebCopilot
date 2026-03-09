@@ -9,7 +9,12 @@ const settingSchema = new mongoose.Schema({
     siteDescription: { type: String, default: 'The smart AI assistant to summarize everything.' },
     stripePubKey: { type: String, default: '' },
     stripeSecKey: { type: String, default: '' },
-    stripeWebhookSecret: { type: String, default: '' }
+    stripeWebhookSecret: { type: String, default: '' },
+    sponsors: [{
+        name: String,
+        url: String,
+        category: String // e.g. "Marketing", "SEO", "Productivity"
+    }]
 }, {
     timestamps: true
 });

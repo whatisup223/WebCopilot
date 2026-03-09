@@ -15,7 +15,8 @@ export default function AdminSettingsClient({ isAr }: { isAr: boolean }) {
         stripePubKey: '',
         stripeSecKey: '',
         stripeWebhookSecret: '',
-        freeDemoLimit: 1
+        freeDemoLimit: 1,
+        sponsors: [] as Array<{ name: string, url: string, category: string }>
     });
 
     useEffect(() => {
@@ -64,6 +65,7 @@ export default function AdminSettingsClient({ isAr }: { isAr: boolean }) {
         { id: 'general', name: isAr ? 'إعدادات الموقع' : 'General', icon: <Globe className="w-4 h-4" /> },
         { id: 'ai', name: isAr ? 'الذكاء الاصطناعي' : 'AI Models', icon: <BrainCircuit className="w-4 h-4" /> },
         { id: 'stripe', name: isAr ? 'بوابات الدفع' : 'Stripe & Billing', icon: <CreditCard className="w-4 h-4" /> },
+        { id: 'sponsors', name: isAr ? 'أدوات الرعاة' : 'Sponsors', icon: <LinkIcon className="w-4 h-4" /> },
         { id: 'account', name: isAr ? 'حساب المدير' : 'Admin Profile', icon: <UserCog className="w-4 h-4" /> },
     ];
 
@@ -216,7 +218,98 @@ export default function AdminSettingsClient({ isAr }: { isAr: boolean }) {
                     </div>
                 )}
 
-                {/* 4. Account Tab */}
+                {/* 4. Sponsors Tab */}
+                {activeTab === 'sponsors' && (
+                    <div className="glass-card rounded-[2.5rem] p-8 md:p-10 border border-white/80 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="absolute top-0 end-0 w-64 h-64 bg-emerald-100/50 rounded-full blur-3xl opacity-50 -z-10"></div>
+                        <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                <LinkIcon className="w-6 h-6" />
+                            </div>
+                            {isAr ? 'إدارة أدوات الرعاة (Sponsor Tools)' : 'Manage Sponsor Tools'}
+                        </h3>
+
+                        <div className="space-y-6">
+                            <p className="text-sm text-slate-500 font-medium max-w-2xl leading-relaxed">
+                                {isAr
+                                    ? 'هذه الأدوات ستظهر للمستخدمين كأدوات "مقترحة ومفيدة" بناءً على سياق المقال. سيقوم الذكاء الاصطناعي باختيار الأنسب منها تلقائياً.'
+                                    : 'These tools will appear to users as "Suggested Useful Tools" based on context. AI will automatically pick the most relevant ones.'}
+                            </p>
+
+                            <div className="space-y-4">
+                                {(settings.sponsors || []).map((sponsor, index) => (
+                                    <div key={index} className="flex flex-wrap md:flex-nowrap gap-4 items-end bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 animate-in fade-in zoom-in duration-300">
+                                        <div className="flex-1 min-w-[150px] space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ms-1">{isAr ? 'اسم الأداة' : 'Tool Name'}</label>
+                                            <input
+                                                type="text"
+                                                value={sponsor.name}
+                                                onChange={(e) => {
+                                                    const newSponsors = [...settings.sponsors];
+                                                    newSponsors[index].name = e.target.value;
+                                                    setSettings({ ...settings, sponsors: newSponsors });
+                                                }}
+                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-[200px] space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ms-1">{isAr ? 'الرابط (Affiliate URL)' : 'Affiliate URL'}</label>
+                                            <input
+                                                type="text"
+                                                value={sponsor.url}
+                                                onChange={(e) => {
+                                                    const newSponsors = [...settings.sponsors];
+                                                    newSponsors[index].url = e.target.value;
+                                                    setSettings({ ...settings, sponsors: newSponsors });
+                                                }}
+                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                                            />
+                                        </div>
+                                        <div className="w-full md:w-32 space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ms-1">{isAr ? 'التصنيف' : 'Category'}</label>
+                                            <input
+                                                type="text"
+                                                value={sponsor.category}
+                                                placeholder="SEO, AI, etc."
+                                                onChange={(e) => {
+                                                    const newSponsors = [...settings.sponsors];
+                                                    newSponsors[index].category = e.target.value;
+                                                    setSettings({ ...settings, sponsors: newSponsors });
+                                                }}
+                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-bold bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const newSponsors = settings.sponsors.filter((_, i) => i !== index);
+                                                setSettings({ ...settings, sponsors: newSponsors });
+                                            }}
+                                            className="px-4 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"
+                                        >
+                                            {isAr ? 'حذف' : 'Delete'}
+                                        </button>
+                                    </div>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSettings({
+                                            ...settings,
+                                            sponsors: [...(settings.sponsors || []), { name: '', url: '', category: '' }]
+                                        });
+                                    }}
+                                    className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
+                                >
+                                    + {isAr ? 'إضافة أداة راعي جديدة' : 'Add New Sponsor Tool'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 5. Account Tab */}
                 {activeTab === 'account' && (
                     <div className="glass-card rounded-[2.5rem] p-8 md:p-10 border border-white/80 shadow-sm relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="absolute top-0 end-0 w-40 h-40 bg-slate-200/50 rounded-full blur-3xl opacity-50 -z-10"></div>

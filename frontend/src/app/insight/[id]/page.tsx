@@ -111,8 +111,8 @@ export default async function InsightPage({ params }: { params: Promise<{ id: st
                                     ) : (
                                         <a key={i} href={tool.url || '#'} target="_blank" className={`flex items-center justify-between p-5 rounded-2xl border-2 border-transparent bg-white hover:border-orange-500 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 group ${isAr ? 'flex-row-reverse' : ''}`}>
                                             <span className="font-extrabold text-slate-800 group-hover:text-orange-600 transition-colors text-lg truncate pr-3">{tool.name || tool}</span>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border shrink-0 ${isAffiliate ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-pink-100 text-pink-800 border-pink-200'}`}>
-                                                {tool.type || (isAffiliate ? 'AFFILIATE' : 'SPONSOR')}
+                                            <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border shrink-0 bg-emerald-50 text-emerald-700 border-emerald-100`}>
+                                                {isAr ? 'أداة مفيدة' : 'USEFUL'}
                                             </span>
                                         </a>
                                     );

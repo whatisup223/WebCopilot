@@ -221,7 +221,7 @@ export default function LiveDemo({ isAr }: { isAr: boolean }) {
 
                         <div className="space-y-6">
                             <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 border border-slate-700 text-white shadow-xl">
-                                <h4 className="font-black text-sm text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">🛠️ {isAr ? 'أدوات مقترحة' : 'Sponsored Tools'}</h4>
+                                <h4 className="font-black text-sm text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">🛠️ {isAr ? 'أدوات مفيدة مقترحة' : 'Useful Tools Suggested'}</h4>
                                 <div className="space-y-3">
                                     {(result.data.recommendedTools || result.data.suggestedTools || []).map((t: any, i: number) => (
                                         typeof t === 'string' ? (

@@ -1,0 +1,178 @@
+const aiService = require('../services/ai.service');
+const Insight = require('../models/Insight');
+const Setting = require('../models/Setting');
+const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
+
+const fallbackInsightsPath = path.join(__dirname, '../insights-fallback.json');
+
+const saveFallbackInsight = (insightData) => {
+    try {
+        let insights = [];
+        if (fs.existsSync(fallbackInsightsPath)) {
+            insights = JSON.parse(fs.readFileSync(fallbackInsightsPath, 'utf8'));
+        }
+        let payload = insightData.toObject ? insightData.toObject() : insightData;
+
+        // Convert ObjectID to string for JSON storage if needed
+        if (payload._id && payload._id.toString) payload._id = payload._id.toString();
+
+        insights.push(payload);
+        if (insights.length > 50) insights.shift();
+        fs.writeFileSync(fallbackInsightsPath, JSON.stringify(insights, null, 2));
+    } catch (e) { console.error("Error saving fallback insight", e); }
+};
+
+const getFallbackInsight = (id) => {
+    try {
+        if (fs.existsSync(fallbackInsightsPath)) {
+            const insights = JSON.parse(fs.readFileSync(fallbackInsightsPath, 'utf8'));
+            return insights.find(i => String(i._id) === String(id));
+        }
+    } catch (e) { }
+    return null;
+}
+
+const analyzePage = async (req, res) => {
+    try {
+        const { text, url, language } = req.body;
+
+        if (!text) {
+            return res.status(400).json({ success: false, error: 'Page content is required for analysis. Please try refreshing the page.' });
+        }
+
+        // Fetch Setting for API Key safely without blocking if DB is down
+        let settings = null;
+        if (mongoose.connection.readyState === 1) {
+            settings = await Setting.findOne();
+        } else {
+            console.warn("MongoDB is currently offline, instantly falling back to JSON config");
+            try { settings = require('../settings-fallback.json'); } catch (e) { }
+        }
+
+        let apiKey = settings?.openaiKey || process.env.OPENAI_API_KEY;
+
+        if (!apiKey) {
+            return res.status(400).json({ success: false, error: 'OpenAI API key is missing. Please configure it in the Admin Settings.' });
+        }
+
+        // 1. طلب التحليل الذكي
+        const analysisData = await aiService.analyzeText(text, apiKey, settings, language);
+
+        // 2. الحفظ في قاعدة البيانات
+        const newInsight = new Insight({
+            pageUrl: url || 'Unknown URL',
+            title: 'تحليل صفحة ويب',
+            summary: analysisData.summary || 'No summary available.',
+            keyPoints: analysisData.keyPoints || [],
+            toolsRecommended: (analysisData.recommendedTools || []).map(t => t.name || t),
+            shareableLink: analysisData.shareableLink
+        });
+
+        // Save to Database securely if online
+        if (mongoose.connection.readyState === 1) {
+            await newInsight.save();
+        } else {
+            console.warn("DB offline. Insight not saved persistently, but saved to fallback JSON.");
+            saveFallbackInsight(newInsight);
+        }
+
+        // 3. إرجاع النتيجة للـ Extension
+        res.json({
+            success: true,
+            data: analysisData,
+            insightId: newInsight._id
+        });
+    } catch (error) {
+        console.error("Analysis Error:", error);
+        res.status(500).json({ success: false, error: error.message || 'Internal Server Error. Please try again later.' });
+    }
+};
+
+const analyzeUrl = async (req, res) => {
+    try {
+        const { url, language } = req.body;
+        if (!url || !url.startsWith('http')) {
+            return res.status(400).json({ success: false, error: 'A valid URL is required.' });
+        }
+
+        const axios = require('axios');
+        let htmlResponse;
+        try {
+            htmlResponse = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 8000 });
+        } catch (botErr) {
+            return res.status(400).json({ success: false, error: 'Cannot access this webpage. It might prevent automated bots.' });
+        }
+
+        // Basic text extraction
+        let text = htmlResponse.data
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        text = text.substring(0, 15000); // Truncate out massive pages
+
+        let settings = null;
+        if (mongoose.connection.readyState === 1) {
+            settings = await Setting.findOne();
+        } else {
+            try { settings = require('../settings-fallback.json'); } catch (e) { }
+        }
+
+        let apiKey = settings?.openaiKey || process.env.OPENAI_API_KEY;
+        if (!apiKey) return res.status(400).json({ success: false, error: 'OpenAI API key is missing. Please configure it in Admin Settings.' });
+
+        const analysisData = await aiService.analyzeText(text, apiKey, settings, language);
+
+        const newInsight = new Insight({
+            pageUrl: url,
+            title: 'Live Demo',
+            summary: analysisData.summary || 'No summary available.',
+            keyPoints: analysisData.keyPoints || [],
+            toolsRecommended: (analysisData.recommendedTools || []).map(t => t.name || t),
+            shareableLink: analysisData.shareableLink
+        });
+
+        if (mongoose.connection.readyState === 1) {
+            await newInsight.save();
+        } else {
+            console.warn("DB offline. Insight not saved persistently, but saved to fallback JSON.");
+            saveFallbackInsight(newInsight);
+        }
+
+        res.json({ success: true, data: analysisData, insightId: newInsight._id });
+    } catch (error) {
+        console.error("Live Demo Analysis Error:", error);
+        res.status(500).json({ success: false, error: error.message || 'Error running live demo analysis.' });
+    }
+};
+
+const getInsight = async (req, res) => {
+    try {
+        let insight = null;
+        if (mongoose.connection.readyState === 1) {
+            try { insight = await Insight.findById(req.params.id); } catch (e) { }
+        }
+
+        // If not found in DB or DB offline, check fallback
+        if (!insight) {
+            insight = getFallbackInsight(req.params.id);
+        }
+
+        if (!insight) return res.status(404).json({ success: false, error: 'Insight not found' });
+
+        res.json({ success: true, insight });
+    } catch (error) {
+        console.error("Get Insight Error:", error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+};
+
+module.exports = {
+    analyzePage,
+    analyzeUrl,
+    getInsight
+};

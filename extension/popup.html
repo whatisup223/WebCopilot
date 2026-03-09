@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Web Copilot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="bg-glow bg-glow-orange"></div>
+    <div class="bg-glow bg-glow-pink"></div>
+
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-icon">W</div>
+            <div class="logo-text">
+                <h1>WebCopilot</h1>
+                <p>AI INSIGHT</p>
+            </div>
+        </div>
+        <button class="settings-btn" id="settingsBtn">⚙️</button>
+    </div>
+
+    <div class="main-content" id="main-content">
+
+        <!-- Start State -->
+        <div id="start-screen" class="state-container">
+            <div class="hero-icon">✨</div>
+            <h2>Ready to extract?</h2>
+            <p>Extract hidden value from this lengthy page in seconds.</p>
+
+            <div style="margin-top: 15px; margin-bottom: 20px;">
+                <label for="langSelect"
+                    style="font-size: 11px; font-weight: bold; color: #64748b; display: block; margin-bottom: 5px;">Output
+                    Language:</label>
+                <select id="langSelect"
+                    style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: bold; color: #334155; outline: none; appearance: none; cursor: pointer; text-align: center;">
+                    <option value="Auto">🌐 Auto-Detect</option>
+                    <option value="English">🇬🇧 English</option>
+                    <option value="Arabic">🇸🇦 العربية</option>
+                    <option value="Spanish">🇪🇸 Español</option>
+                    <option value="French">🇫🇷 Français</option>
+                    <option value="German">🇩🇪 Deutsch</option>
+                    <option value="Chinese">🇨🇳 中文</option>
+                </select>
+            </div>
+            <button id="analyzeBtn" class="btn-primary">
+                🚀 Analyze Page Now
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="state-container hidden text-center" style="padding-top: 40px;">
+            <div class="loader"></div>
+            <p class="loading-text">Running AI models...<br><span>Extracting gold from text</span></p>
+        </div>
+
+        <!-- Results State -->
+        <div id="results" class="hidden">
+
+            <div class="glass-card result-box">
+                <div class="result-box-line"></div>
+                <h3><span>📝</span> AI Summary</h3>
+                <p id="summaryText"></p>
+            </div>
+
+            <div class="glass-card result-box">
+                <h3><span>💡</span> Key Takeaways</h3>
+                <ul id="keyPointsList"></ul>
+            </div>
+
+            <div class="glass-card result-box tools-box">
+                <h3><span>🛠️</span> Sponsored Tools</h3>
+                <div id="toolsList" class="tools-grid"></div>
+            </div>
+
+            <button id="shareBtn" class="btn-dark">
+                🔗 Copy Viral Link
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="state-container hidden" style="margin-top: 24px;">
+        <div class="error-icon">⚠️</div>
+        <p id="errorText"></p>
+        <button id="retryBtn" class="btn-outline">Try Again</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
